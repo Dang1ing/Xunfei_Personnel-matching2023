@@ -1,2 +1,6 @@
 Data/*.json
+<<<<<<< HEAD
 *.json
+=======
+Data/DataEncoder.csv
+>>>>>>> zhuhui
