@@ -1,65 +1,48 @@
-import json
 import pandas as pd
-import numpy as np
-from sklearn.linear_model import LogisticRegression
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import cross_val_predict
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler, OneHotEncoder
+from sklearn.compose import ColumnTransformer
+from sklearn.pipeline import Pipeline
 
-train_data = pd.read_json('./train.json')
-train_data['解析结果'] = train_data['解析结果'].apply(lambda x : json.dumps(x).replace('"', ' ').replace('"', ' ').split())
+# 假设数据存储在名为 'data.csv' 的CSV文件中，读取数据
+data = pd.read_csv('data.csv')
 
-test_data = pd.read_json('/work/data/personnel-matching-test-set/test.json')
-test_data['解析结果'] = test_data['解析结果'].apply(lambda x : json.dumps(x).replace('"', ' ').replace('"', ' ').split())
+# 分离特征和目标
+X = data.drop(columns=['岗位ID'])  # 特征矩阵
+y = data['岗位ID']  # 目标（岗位ID）
 
-joblist = pd.read_json('./job_list.json')
-joblist['解析结果'] = joblist['岗位名称'] + ' ' + joblist['岗位介绍'] + ' ' + joblist['岗位要求']
-joblist['解析结果'] = joblist['解析结果'].apply(lambda x : x.split())
+# 划分数据集为训练集和测试集
+X_train, X_val, y_train, y_val = train_test_split(
+    X, y, test_size=0.2, random_state=42)
 
-train_feat = []
-for row in train_data.iterrows():
-    label = row[1]['岗位ID']
-    query_text= row[1]['解析结果']
-    feat = [
-        label,
-        len(query_text), len(set(query_text)), len(query_text) - len(set(query_text)),
-    ]
-    for target_text in joblist['解析结果']:
-        feat += [
-            len(set(query_text) & set(target_text)),
-            len(set(query_text) & set(target_text)) / len(query_text),
-            len(set(query_text) & set(target_text)) / len(target_text),
-            
-            len(set(query_text) & set(target_text)) / len(set(target_text)),
-            len(set(query_text) & set(target_text)) / len(set(query_text))
+# 定义类别型特征和数值型特征
+categorical_features = ['工作职位', '公司名称',
+                        '专业', '学校', '学校层次', '职位名', '组织名', '项目名称']
+numeric_features = ['工作经历数量', '社会经历数量', '项目数量', '技能数量', '荣誉数量']
 
-        ]
-    train_feat.append(feat)
-train_feat = np.array(train_feat)
-m = RandomForestClassifier()
-m.fit(
-    train_feat[:, 1:],
-    train_feat[:, 0],
-)
+# 创建预处理管道
+numeric_transformer = Pipeline(steps=[
+    ('scaler', StandardScaler())  # 数值型特征标准化
+])
 
-test_feat = []
-for row in test_data.iterrows():
-    query_text= row[1]['解析结果']
-    feat = [
-        len(query_text), len(set(query_text)), len(query_text) - len(set(query_text)),
-    ]
-    for target_text in joblist['解析结果']:
-        feat += [
-            len(set(query_text) & set(target_text)),
-            len(set(query_text) & set(target_text)) / len(query_text),
-            len(set(query_text) & set(target_text)) / len(target_text),
-            
-            len(set(query_text) & set(target_text)) / len(set(target_text)),
-            len(set(query_text) & set(target_text)) / len(set(query_text))
+categorical_transformer = Pipeline(steps=[
+    ('encoder', OneHotEncoder(handle_unknown='ignore'))  # 类别型特征独热编码
+])
 
-        ]
-    test_feat.append(feat)
-test_feat = np.array(test_feat)
-pd.DataFrame({
-    '简历ID': range(len(test_data)),
-    '岗位ID': m.predict(test_feat).astype(int)
-}).to_csv('/work/output/result.csv', index=None)
+preprocessor = ColumnTransformer(
+    transformers=[
+        ('num', numeric_transformer, numeric_features),
+        ('cat', categorical_transformer, categorical_features)
+    ])
+
+# 在训练集上拟合预处理管道
+X_train_preprocessed = preprocessor.fit_transform(X_train)
+
+# 在验证集上应用预处理管道
+X_val_preprocessed = preprocessor.transform(X_val)
+
+# 输出预处理后的特征矩阵和目标
+print("预处理后的特征矩阵：")
+print(X_train_preprocessed)
+print("训练集目标：")
+print(y_train)
