@@ -1,8 +1,8 @@
 '''
 Author: zhuhui
 Date: 2023-09-01 16:18:39
-LastEditors: zhuhui
-LastEditTime: 2023-09-02 23:24:20
+LastEditors: zhuhui 2123535613@qq.com
+LastEditTime: 2023-09-03 17:19:51
 Description: 
 Copyright (c) 2023 by zhuhui, All Rights Reserved. 
 '''
@@ -18,12 +18,16 @@ import sys
 
 
 def main(config,mode='offline'):
-    data_generator = DataGenerator(1024,8)
+    # 512 1024 0.35
+    # 1024 1024 0.35
+    data_generator = DataGenerator(512,8)
     feat_list = data_generator.get_feature_info()
 
-
-    model = select_model()(config=config, feat_list=feat_list,embedding_size=256,num_classes=20)  # 默认加载deep_fm
-    model.fit(data_generator,mode)   
+    # 64 0.23
+    # 512 0.29
+    # 1024 0.35
+    model = select_model()(config=config, feat_list=feat_list,embedding_size=1024,num_classes=20)  # 默认加载deep_fm
+    model.fit(data_generator,mode)
 
 
 def to_json(config, res_dict):

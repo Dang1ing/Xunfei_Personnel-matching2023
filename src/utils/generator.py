@@ -32,7 +32,9 @@ class OfflineData(Dataset):
         data = self.x.iloc[index].to_dict()
         for key,value in data.items():
             data[key] = torch.tensor(value,dtype=torch.float32)
+            # data[key] = torch.tensor(value)
         return data, torch.tensor(self.y[index],dtype=torch.float32)
+        # return data, torch.tensor(self.y[index])
 
 
 class OnlineData(Dataset):
@@ -52,7 +54,7 @@ class DataGenerator():
         self.bs = batch_size
         self.num_workers = num_workers
 
-        self.filename = '../Data/raw.csv'
+        self.filename = '../Data/encode.csv'
         self.Encoder_result = {}
 
         self._load_data()   # 加载数据集
@@ -77,13 +79,21 @@ class DataGenerator():
         self.encoder = LabelBinarizer()
         self.Encoder_result['岗位ID'] = self.encoder.fit_transform(data).tolist()
 
-        # LabelEncoder编码
-        field1_list = {'工作经历数量','社会经历数量','项目数量','技能数量','荣誉数量'}
-
-        for field in field1_list:
+        field_list = set(self.CSVreader.columns.to_list()) - {'岗位ID'}
+        # for field in field_list:
+        #     self.Encoder_result[field] = self.CSVreader[field].to_list()
+        for field in field_list:
             data = self.CSVreader[field].to_list()
             encoder = LabelBinarizer()
             self.Encoder_result[field] = encoder.fit_transform(data).tolist()
+
+        # LabelEncoder编码
+        # field1_list = {'工作经历数量','社会经历数量','项目数量','技能数量','荣誉数量'}
+
+        # for field in field1_list:
+        #     data = self.CSVreader[field].to_list()
+        #     encoder = LabelBinarizer()
+        #     self.Encoder_result[field] = encoder.fit_transform(data).tolist()
         
         # MulitHot编码
         # field2_list = set(self.CSVreader.columns.to_list()) - field1_list - {'岗位ID'}
@@ -100,6 +110,8 @@ class DataGenerator():
         #         self.Encoder_result[field] = pca.fit_transform(self.Encoder_result[field]).tolist()
         
         self.data = pd.DataFrame(self.Encoder_result)
+        # print(self.data)
+        # sys.exit()
         self.train, self.test = train_test_split(self.data, train_size=0.75)
         self.data.drop(columns='岗位ID',inplace=True)
     
@@ -110,14 +122,14 @@ class DataGenerator():
             item = item.tolist()
             tmp = [0]*length
             max_index = item.index(max(item))
-            print(max_index)
+            # print(max_index)
             tmp[max_index] = 1
             label_list.append(tmp)
-            print(tmp)
+            # print(tmp)
         label_list = self.encoder.inverse_transform(np.array(label_list))
-        print("label list")
-        for item in label_list:
-            print(item)
+        # print("label list")
+        # for item in label_list:
+            # print(item)
         return label_list
 
 
@@ -125,6 +137,10 @@ class DataGenerator():
         '''获取feature的信息,名称：数据长度'''
         vocabulary_size = {}
         for feat in self.data.columns:
+            # if feat == '岗位ID':
+            #     vocabulary_size[feat] = len(self.data[feat][0])
+            # else:
+            #     vocabulary_size[feat] = 1
             vocabulary_size[feat] = len(self.data[feat][0])
         return vocabulary_size
 
@@ -145,8 +161,7 @@ class DataGenerator():
         x_ = self.test.drop(columns='岗位ID')
         y_ = self.test['岗位ID']
         testdata = OfflineData(x_,y_)
-        return DataLoader(testdata,
-                          batch_size=self.bs)
+        return DataLoader(testdata,batch_size=len(y_)) # 一次加载完整
 
 
     def make_pretrain_loader(self):

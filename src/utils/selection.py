@@ -12,7 +12,7 @@
 # here put the import lib
 from torch.optim import SGD, Adam
 from torch.optim.lr_scheduler import ExponentialLR
-from torch.nn import BCELoss, MSELoss
+from torch.nn import BCELoss, MSELoss,CrossEntropyLoss
 from layers._loss import *
 from model import deepfm
 
@@ -45,6 +45,8 @@ def select_loss(loss_type='bce', reduction='mean'):
         return MSELoss(reduction=reduction)
     elif loss_type == 'bpr':
         return bpr_loss()
+    elif loss_type == 'ce':
+        return CrossEntropyLoss(reduction=reduction)
     else:
         return NotImplementedError('Such loss function has not been implemented!')
 

@@ -1,2 +1,4 @@
 Data/*.json
 Data/DataEncoder.csv
+src/log/*
+src/save_model/*

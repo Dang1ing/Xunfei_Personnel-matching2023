@@ -2,7 +2,7 @@
 Author: zhuhui
 Date: 2023-09-01 14:29:25
 LastEditors: zhuhui 2123535613@qq.com
-LastEditTime: 2023-09-03 14:11:58
+LastEditTime: 2023-09-03 17:37:06
 Description: 
 Copyright (c) 2023 by zhuhui, All Rights Reserved. 
 '''
@@ -71,6 +71,9 @@ class BaseModel(nn.Module):
                 x,y = batch[0],batch[1]
                 y_ = model(x)
                 criterion = selection.select_loss(self.loss)
+                # print(y)
+                # print(y_)
+                # sys.exit()
                 loss = criterion(y_, y)
                 # print(loss.item())
                 optimizer.zero_grad()
@@ -237,15 +240,15 @@ class BaseModel(nn.Module):
             y_ = model(x)
             # print(y_)
             # sys.exit()
-            print(type(y),y.shape)
-            print(type(y_),y_.shape)
+            # print(type(y),y.shape)
+            # print(type(y_),y_.shape)
             y_ = self.data_generator.label_inverse_transform(y_)
             y = self.data_generator.label_inverse_transform(y)
             # print(y)
             # print(y_)
             F1 = f1_score(y,y_,average='macro')
             print(F1)
-            sys.exit()
+            # sys.exit()
         return F1
 
     

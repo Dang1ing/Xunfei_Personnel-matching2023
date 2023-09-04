@@ -1,8 +1,8 @@
 '''
 Author: zhuhui
 Date: 2023-09-01 15:29:45
-LastEditors: zhuhui
-LastEditTime: 2023-09-02 23:13:56
+LastEditors: zhuhui 2123535613@qq.com
+LastEditTime: 2023-09-03 17:18:39
 Description: 
 Copyright (c) 2023 by zhuhui, All Rights Reserved. 
 '''
@@ -11,6 +11,7 @@ from model.basemodel import BaseModel
 import pandas as pd
 import torch
 import torch.nn as nn
+import sys
 
 
 class DeepFM(BaseModel):
@@ -28,6 +29,9 @@ class DeepFM(BaseModel):
         
         self.FMEmbedding = nn.ModuleDict({})
         self.FMLinears1 = nn.ModuleDict({})
+
+        # print(self.feat_list)
+        # sys.exit()
         
         input_size = len(feat_list)*embedding_size
 
@@ -41,10 +45,10 @@ class DeepFM(BaseModel):
         
         self.dnn = nn.Sequential(OrderedDict([
             ('L1', nn.Linear(input_size, 200)),
-            #('BN1', nn.BatchNorm1d(200, momentum=0.5)),
+            # ('BN1', nn.BatchNorm1d(200, momentum=0.5)),
             ('act1', nn.ReLU()),
             ('L2', nn.Linear(200, 200)), 
-            #('BN1', nn.BatchNorm1d(200, momentum=0.5)),
+            # ('BN1', nn.BatchNorm1d(200, momentum=0.5)),
             ('act2', nn.ReLU()),
             ('L3', nn.Linear(200, self.num_classes, bias=False))
         ]))
